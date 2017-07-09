@@ -12,24 +12,19 @@ public class Karatsuba {
         BigInteger b;
         BigInteger c;
         BigInteger d;
-        BigInteger step1;
-        BigInteger step2;
-        BigInteger step3;
-        BigInteger step4;
-        BigInteger one;
-        BigInteger two;
 
         String stringX = String.valueOf(x);
         String stringY = String.valueOf(y);
         int lengthX = stringX.length();
         int lengthY = stringY.length();
+        int maxLength = Math.max(lengthX,lengthY);
 
         //base case, multiplication with one digit is fine
-        if (stringX.length() == 1 || stringY.length() == 1) {
+        if (maxLength == 1) {
             return x.multiply(y);
         }
 
-        //now pad the two strings to be the same length
+        //now pad the two strings to be the same length if multiplying numbers where lengthX and lengthY are not equal
         if (lengthX > lengthY) {
             String formatter = "%0";
             formatter += String.valueOf(lengthX);
@@ -47,57 +42,44 @@ public class Karatsuba {
         }
 
         //now establish A/B/C/D
-        a = new BigInteger(stringX.substring(0, lengthX / 2));
-        b = new BigInteger(stringX.substring(lengthX / 2));
-        c = new BigInteger(stringY.substring(0, lengthY / 2));
-        d = new BigInteger(stringY.substring(lengthY / 2));
+        a = new BigInteger(stringX.substring(0, maxLength / 2));
+        b = new BigInteger(stringX.substring(maxLength / 2));
+        c = new BigInteger(stringY.substring(0, maxLength / 2));
+        d = new BigInteger(stringY.substring(maxLength / 2));
 
+        //perform steps of Karatsuba algorithm
+        BigInteger ac = karatsubaMultiply(a, c);
+        BigInteger bd = karatsubaMultiply(b, d);
+        BigInteger abcd = karatsubaMultiply((a.add(b)), (c.add(d)));
+        BigInteger gauss  = abcd.subtract(bd).subtract(ac);
 
-        step1 = karatsubaMultiply(a, c);
-        step2 = karatsubaMultiply(b, d);
-        step3 = karatsubaMultiply((a.add(b)), (c.add(d)));
-        step4 = step3.subtract(step2).subtract(step1);
-
-        BigInteger shift1 = BigInteger.valueOf(10).pow(lengthX);
-        BigInteger shift2 = BigInteger.valueOf(10).pow(lengthX/2);
-
+        BigInteger sum1;
+        BigInteger sum2;
 
         if (stringX.length() % 2 == 0) {
-            one = step1.multiply(shift1);
-            two = step4.multiply(shift2);
+            sum1 = ac.multiply(BigInteger.valueOf(10).pow(maxLength));
+            sum2 = gauss.multiply(BigInteger.valueOf(10).pow(maxLength/2));
         }
         else {
-            one = step1.multiply(BigInteger.valueOf(10).pow(lengthX+1));
-            two = step4.multiply(BigInteger.valueOf(10).pow(lengthX/2 +1));
+           sum1 = ac.multiply(BigInteger.valueOf(10).pow(lengthX+1));
+           sum2 = gauss.multiply(BigInteger.valueOf(10).pow(lengthX/2 +1));
         }
 
-        return one.add(two).add(step2);
+        return sum1.add(sum2).add(bd);
     }
 
+    public static void testKaratsuba(BigInteger x, BigInteger y) {
+        System.out.println(x.toString()+"x"+y.toString()+"="+karatsubaMultiply(x,y));
+    }
     public static void test() {
-        System.out.println("9x9=" + karatsubaMultiply(BigInteger.valueOf(9),BigInteger.valueOf(9)));
-        System.out.println("2x4=" + karatsubaMultiply(BigInteger.valueOf(2),BigInteger.valueOf(4)));
-        System.out.println("9x11=" + karatsubaMultiply(BigInteger.valueOf(9),BigInteger.valueOf(11)));
-        System.out.println("14x89=" + karatsubaMultiply(BigInteger.valueOf(14),BigInteger.valueOf(89)));
-        System.out.println("21x389=" + karatsubaMultiply(BigInteger.valueOf(21),BigInteger.valueOf(389)));
-        System.out.println("814x7=" + karatsubaMultiply(BigInteger.valueOf(814),BigInteger.valueOf(7)));
-        System.out.println("456x456=" + karatsubaMultiply(BigInteger.valueOf(456),BigInteger.valueOf(456)));
-        System.out.println("7841x898=" + karatsubaMultiply(BigInteger.valueOf(7841),BigInteger.valueOf(898)));
-        System.out.println("1345x1111=" + karatsubaMultiply(BigInteger.valueOf(1345),BigInteger.valueOf(1111)));
-        System.out.println("134580x1111=" + karatsubaMultiply(BigInteger.valueOf(134580),BigInteger.valueOf(1111)));
-        System.out.println("78956421x795461321=" + karatsubaMultiply(BigInteger.valueOf(78956421),BigInteger.valueOf(795461321)));
-        String test1 = "7895642114";
-        String test2 = "7954613215";
-        System.out.println(test1+"x"+test2+"=" + karatsubaMultiply(new BigInteger(test1),new BigInteger(test2)));
-        String largeInt1 = "3141592653589793238462643383279502884197169399375105820974944592";
-        String largeInt2 = "2718281828459045235360287471352662497757247093699959574966967627";
-        System.out.println(largeInt1+"x"+largeInt2+"=" + karatsubaMultiply(new BigInteger(largeInt1),new BigInteger(largeInt2)));
-//        String largeTest1 = "7879654631213213";
-//        String largeTest2 = "8461843218749843";
-//        System.out.println(largeTest1+"x"+largeTest2+"=" + karatsubaMultiply(new BigInteger(largeTest1),new BigInteger(largeTest2)));
-
-//        System.out.println(largeInt1+"x"+2+"=" + karatsubaMultiply(new BigInteger(largeInt1),BigInteger.valueOf(2)));
-
+        testKaratsuba(BigInteger.valueOf(9),BigInteger.valueOf(34));
+        testKaratsuba(BigInteger.valueOf(154),BigInteger.valueOf(112));
+        testKaratsuba(BigInteger.valueOf(8798),BigInteger.valueOf(349));
+        testKaratsuba(BigInteger.valueOf(91),BigInteger.valueOf(9));
+        testKaratsuba(BigInteger.valueOf(9584),BigInteger.valueOf(1239));
+        testKaratsuba(BigInteger.valueOf(9123123),BigInteger.valueOf(877));
+        testKaratsuba(BigInteger.valueOf(94343),BigInteger.valueOf(97878786));
+        testKaratsuba(BigInteger.valueOf(129),BigInteger.valueOf(9676767));
 
     }
     public static void main(String[] args) {
